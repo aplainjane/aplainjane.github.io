@@ -3898,7 +3898,8 @@ figure.highlight pre .javascript .function {
   width: 100%;
   height: 100%;
   position: fixed;
-  background: var(--anzhiyu-card-bg);
+  background: url("https://aplainjane.github.io/img/content.png") no-repeat center center; /* 使用图片作为背景 */
+  background-size: cover; /* 图片铺满容器 */
   z-index: 1001;
   opacity: 1;
   -ms-filter: none;
