@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>mvcc的初步学习</title>
+      <link href="/article/1e622eac.html"/>
+      <url>/article/1e622eac.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p><img src="/article/undefined/wallhaven-og9wlm_1920x1080.png" alt="wallhaven-og9wlm_1920x1080"></p><p>这几天正在打rmdb这个比赛，初赛还在进行中，虽然在开赛第一周的时候就已经基本上完成了所有题目了，但是还是有些比较困难的知识点没搞懂，而且像mvcc这种题目，非常玄乎，队友把他搞出来了，但自己却是一知半解，刚好15445-2024fall有这个的专门讲解，那就稍微看看做下笔记，以及后续再跟着代码再看一遍……</p><p>成绩镇帖（2025-5-26 16:12）：</p><p><img src="/article/undefined/2ffee8668e5b755373b73feaf083dd7.png" alt="2ffee8668e5b755373b73feaf083dd7"></p><h1 id="初步概念学习"><a href="#初步概念学习" class="headerlink" title="初步概念学习"></a>初步概念学习</h1><p>先感慨一句，这玩意做成分布式的不炸了吗……</p><p><img src="/article/undefined/7aea5b7abed94c8ecbd0f8683c118c5.png" alt="7aea5b7abed94c8ecbd0f8683c118c5"></p><p>线性流程大概如下：</p><ol><li>事务t1和t2分别begin</li><li>启动的时候分配一个开始时间戳</li></ol><p>​<img src="/article/undefined/d9ddd801b22ac96bb54f1d518dbfb08.png" alt="d9ddd801b22ac96bb54f1d518dbfb08"></p><ol start="3"><li>他们的结束时间戳全部设为无穷(表示未结束 或下一版本未结束修改本事务)</li><li>当t1在t2之前commit，当t2结束事务后，就会把比他先结束的t1的结束时间戳设置为他的开始时间戳，这样的话时间戳顺序就是t1 (0 - 2) t2 (2 - 无穷)</li><li>有一个新事务t3来的话 他的开始时间戳就是3 t1对他就是不可见的</li><li>他必须找到一个包含他事务号的区间的事务 才对他是可见的 也就是2 - 无穷，这个时候还不能确定可见的事务是否已提交 所以还需要维护一个事务状态表：</li></ol><p>​<img src="/article/undefined/5ac7a50956c088277eed1eeb328f621.png" alt="5ac7a50956c088277eed1eeb328f621"></p><ol start="7"><li><p>但是如果3读元组A的时候t2未提交 那么他依旧需要去看旧版本A1 而不是A2</p><p><img src="/article/undefined/3274b3748730d75ed3a0a0b9351a613.png" alt="3274b3748730d75ed3a0a0b9351a613"></p><p><img src="/article/undefined/204b3faf0a78f02d96ada73be1d6e5a.png" alt="204b3faf0a78f02d96ada73be1d6e5a"></p><p><img src="/article/undefined/6d4ebf5ca7d2decf23bb6b5046ec150.png" alt="6d4ebf5ca7d2decf23bb6b5046ec150"></p></li></ol><h1 id="写写冲突"><a href="#写写冲突" class="headerlink" title="写写冲突"></a>写写冲突</h1><p><img src="/article/undefined/2771c5d1781fc1030d0a2303a355108.png" alt="2771c5d1781fc1030d0a2303a355108"></p><ol><li>维护一条版本链(还有一个时间旅行的概念，但其实不怎么有用)</li><li>如果修改了一个数据 那么就插入这一个新的数据到本来旧数据的位置，将旧数据作为增量表通过指针连接，方便回滚以及事务隔离级别的查找(也有将新数据作为增量表的，可以对比两者优劣)</li><li>同一事务中如果更新一条数据，后再次更新多条数据或单条数据，最佳情况下应该只有一个版本</li><li>最难的是垃圾回收机制 因为很容易会有一些版本其实是永远不再看见的 应该被回收 其实应该有一个全局时间戳 用以清理目前一些无用的条目(版本低于该时间戳的都得被清理掉)</li></ol><h1 id="后续"><a href="#后续" class="headerlink" title="后续"></a>后续</h1><p>后续内容大部分在分析oracle等sql的处理方法，就先跳过了，后续有需要再补充(但其实还有一个增量表的例子也挺有意思)</p><p><img src="/article/undefined/04e3863e51692852c77c6ea7d4345b6.png" alt="04e3863e51692852c77c6ea7d4345b6"></p><p><img src="/article/undefined/c58a393eebe2aeff4e6c14846973984.png" alt="c58a393eebe2aeff4e6c14846973984"></p><p>不一定可串行，因为修改是增量的。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 数据库 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 并发 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>一些杂七杂八的想法</title>
       <link href="/article/51cf0114.html"/>
       <url>/article/51cf0114.html</url>
