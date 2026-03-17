@@ -206,9 +206,9 @@
                 项目描述将在这里显示。
             </p>
             
-            <button class="mt-auto w-full py-3 rounded-xl bg-gradient-to-r from-[#FF9A8B] to-[#FFD3B6] text-white font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
+            <a id="panel-link" href="#" target="_blank" class="mt-auto block w-full py-3 rounded-xl bg-gradient-to-r from-[#FF9A8B] to-[#FFD3B6] text-white font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all text-center no-underline">
                 探索详情
-            </button>
+            </a>
         </div>
 
         <!-- 右侧快速导航列表：增加了 px-4 py-4 内边距防止放大时被裁切 -->
@@ -226,12 +226,13 @@
                 id: 1,
                 title: "云端日记本 App",
                 tag: "Web Design",
-                desc: "这是一款治愈系日记应用。它采用轻量级的架构，记录用户的每一个小情绪，并将它们化作云朵存储在“天空”中。使用了 React 和 TailwindCSS 构建。",
+                desc: "这是一款治愈系日记应用。它采用轻量级的架构，记录用户的每一个小情绪，并将它们化作云朵存储在「天空」中。使用了 React 和 TailwindCSS 构建。",
                 emoji: "🎨",
-                bgColor: "#FFD3B6",   // 面板背景色
-                tagColor: "#FFF5C3",  // 标签背景
-                tagText: "#FF9A8B",   // 标签文字
-                markerColor: 0xFF9A8B // 3D 坐标点颜色
+                url: "/pages/test/index.html",
+                bgColor: "#FFD3B6",
+                tagColor: "#FFF5C3",
+                tagText: "#FF9A8B",
+                markerColor: 0xFF9A8B
             },
             {
                 id: 2,
@@ -239,6 +240,7 @@
                 tag: "Algorithm",
                 desc: "基于大语言模型微调的性格陪伴机器人。设定是一只温暖的橘猫，会在深夜给你讲冷笑话。优化了上下文记忆和情感分析。",
                 emoji: "🤖",
+                url: "#",
                 bgColor: "#D4C4FB",
                 tagColor: "#E6E6FA",
                 tagText: "#8C75D8",
@@ -250,6 +252,7 @@
                 tag: "Data Viz",
                 desc: "利用 D3.js 将繁杂的开源贡献数据转化为可视化的星空图。每一个提交就是一颗亮起的星星，连接起来形成属于开发者的星系。",
                 emoji: "📊",
+                url: "#",
                 bgColor: "#A0E8AF",
                 tagColor: "#DDF4E4",
                 tagText: "#5CBA76",
@@ -261,6 +264,7 @@
                 tag: "UI/UX",
                 desc: "模拟深夜营业的线上咖啡馆，用户可以点选白噪音进行番茄钟专注。大量采用了温暖的木质色调与拟物化的阴影效果。",
                 emoji: "☕",
+                url: "#",
                 bgColor: "#FFB6B9",
                 tagColor: "#FAE3D9",
                 tagText: "#E87A80",
@@ -272,6 +276,7 @@
                 tag: "New Magic",
                 desc: "你看！这是我刚刚添加的新作品。由于使用了斐波那契球面算法，所有的作品坐标都会被自动重新计算，永远均匀、漂亮地散落在星球上！",
                 emoji: "✨",
+                url: "#",
                 bgColor: "#FDE047",
                 tagColor: "#FEF08A",
                 tagText: "#CA8A04",
@@ -433,7 +438,7 @@
             const markerMeshes = new THREE.Group();
             scene.add(markerMeshes);
 
-            // 使用“斐波那契球面算法 (Fibonacci Sphere)”自动均匀分布坐标点
+            // 使用"斐波那契球面算法 (Fibonacci Sphere)"自动均匀分布坐标点
             const numProjects = projectsData.length;
             const goldenRatio = (1 + Math.sqrt(5)) / 2;
             const angleIncrement = Math.PI * 2 * goldenRatio;
@@ -559,7 +564,7 @@
                     
                     if (currentHoveredProject !== null) {
                         currentHoveredProject = null; // 鼠标移出时重置记录
-                        // 如果当前没有项目被“固定”，鼠标移出就隐藏卡片
+                        // 如果当前没有项目被"固定"，鼠标移出就隐藏卡片
                         if (!pinnedProject) {
                             panel.classList.remove('active');
                         }
@@ -602,6 +607,7 @@
             const pTitle = document.getElementById('panel-title');
             const pDesc = document.getElementById('panel-desc');
             const pEmoji = document.getElementById('panel-emoji');
+            const pLink = document.getElementById('panel-link');
             const closeBtn = document.getElementById('close-btn');
             const rightNav = document.getElementById('right-nav');
 
@@ -666,6 +672,8 @@
                 
                 pEmoji.innerText = data.emoji;
                 pEmoji.style.background = `linear-gradient(135deg, ${data.bgColor}, #ffffff)`;
+
+                pLink.href = data.url || '#';
 
                 // 弹出动画
                 panel.classList.add('active');
