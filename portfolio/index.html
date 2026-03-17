@@ -1,384 +1,788 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>作品集 | 去远方</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 星球作品集 - 我的奇妙航行</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- 引入 Three.js 和 OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- 引入动画库 GSAP 用于平滑的 UI 动画 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Nunito', sans-serif;
+            /* 可爱温馨的星空图背景 (多层渐变+星云+星星) */
+            background-color: #2b1b4d;
+            background-image: 
+                /* 1. 闪烁的小星星 (2D 背景层) */
+                radial-gradient(2px 2px at 15% 20%, #FFF5C3 100%, transparent 0),
+                radial-gradient(2px 2px at 75% 15%, #FFFFFF 100%, transparent 0),
+                radial-gradient(3px 3px at 85% 45%, #FFD3B6 100%, transparent 0),
+                radial-gradient(2px 2px at 25% 65%, #FFFFFF 100%, transparent 0),
+                radial-gradient(3px 3px at 60% 80%, #D4C4FB 100%, transparent 0),
+                radial-gradient(2px 2px at 10% 90%, #FFF5C3 100%, transparent 0),
+                /* 2. 柔和的星云光晕 (增加温馨和梦幻感) */
+                radial-gradient(circle at 15% 30%, rgba(255, 182, 185, 0.3) 0%, transparent 40%),
+                radial-gradient(circle at 85% 60%, rgba(212, 196, 251, 0.25) 0%, transparent 40%),
+                radial-gradient(circle at 50% 80%, rgba(255, 245, 195, 0.2) 0%, transparent 50%),
+                /* 3. 暮色星空的底色渐变 (深紫 -> 烟粉 -> 奶油橘) */
+                linear-gradient(to bottom, #2B1B4D 0%, #694A74 40%, #B87B8F 75%, #F4D0B4 100%);
+            background-size: 
+                250px 250px, 300px 300px, 200px 200px, 350px 350px, 400px 400px, 250px 250px, 
+                100% 100%, 100% 100%, 100% 100%, 100% 100%;
+            background-repeat: repeat, repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+            background-attachment: fixed;
+            /* 修复背景发白的问题：强制撑开 body 高度和宽度 */
+            width: 100vw;
+            height: 100vh;
+        }
 
-    body {
-      font-family: 'Noto Serif SC', Georgia, serif;
-      background: #fdf6ee;
-      color: #5c4a3a;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
 
-    /* ---- floating particles ---- */
-    .particles {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-    }
+        /* UI 层，指针事件穿透，以便能操作背后的 3D 画布 */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none; 
+            display: flex;
+            flex-direction: column;
+        }
 
-    .particle {
-      position: absolute;
-      border-radius: 50%;
-      opacity: 0;
-      animation: floatUp linear infinite;
-    }
+        /* 让具体的 UI 元素恢复指针事件 */
+        .pointer-events-auto {
+            pointer-events: auto;
+        }
 
-    @keyframes floatUp {
-      0%   { transform: translateY(100vh) scale(0); opacity: 0; }
-      10%  { opacity: 0.6; }
-      90%  { opacity: 0.6; }
-      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
-    }
+        /* 隐藏滚动条 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.5); border-radius: 10px; }
 
-    /* ---- back link ---- */
-    .back-link {
-      position: fixed;
-      top: 28px;
-      left: 28px;
-      color: #c0896e;
-      text-decoration: none;
-      font-size: 0.95rem;
-      z-index: 100;
-      background: rgba(255,255,255,0.7);
-      backdrop-filter: blur(8px);
-      padding: 8px 18px;
-      border-radius: 24px;
-      box-shadow: 0 2px 12px rgba(180,140,100,0.12);
-      transition: all 0.3s ease;
-      letter-spacing: 0.5px;
-    }
+        /* 发光文字特效 */
+        .text-glow {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
 
-    .back-link:hover {
-      background: #c0896e;
-      color: #fff;
-      transform: scale(1.05);
-    }
+        /* 作品详情卡片样式 */
+        #project-panel {
+            transform: translateX(-120%);
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 4px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 20px 50px rgba(212, 196, 251, 0.5);
+        }
+        #project-panel.active {
+            transform: translateX(0);
+        }
+        
+        /* 手机端卡片自适应 */
+        @media (max-width: 768px) {
+            #project-panel {
+                transform: translateY(120%);
+                bottom: 20px;
+                top: auto !important;
+                left: 20px !important;
+                right: 20px !important;
+                width: auto !important;
+            }
+            #project-panel.active {
+                transform: translateY(0);
+            }
+            /* 手机端隐藏右侧导航，避免遮挡 */
+            #right-nav {
+                display: none !important;
+            }
+        }
+        
+        /* 隐藏右侧导航的滚动条，保持UI纯净，但依然可以滑动 */
+        #right-nav {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        #right-nav::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
 
-    /* ---- header ---- */
-    header {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-      padding: 100px 20px 30px;
-      animation: fadeDown 1s ease both;
-    }
+        /* 脉冲提示动画 */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        .drag-hint-ring {
+            position: absolute;
+            inset: 0;
+            border: 2px solid white;
+            border-radius: 50%;
+            animation: pulse-ring 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
 
-    @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-30px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    header h1 {
-      font-size: 2.8rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #d4956a, #c07a9f, #8c7ab5);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 16px;
-    }
-
-    header p {
-      font-size: 1.05rem;
-      color: #b09a8a;
-      letter-spacing: 2px;
-    }
-
-    .divider {
-      width: 60px;
-      height: 3px;
-      background: linear-gradient(90deg, #e8c4a0, #d4a0c0);
-      border-radius: 4px;
-      margin: 28px auto 0;
-      animation: scaleIn 1s 0.4s ease both;
-    }
-
-    @keyframes scaleIn {
-      from { transform: scaleX(0); }
-      to   { transform: scaleX(1); }
-    }
-
-    /* ---- grid ---- */
-    .grid {
-      position: relative;
-      z-index: 1;
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 40px 24px 100px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 28px;
-    }
-
-    /* ---- card ---- */
-    .card {
-      background: rgba(255, 255, 255, 0.75);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(210, 180, 155, 0.3);
-      border-radius: 20px;
-      overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-      opacity: 0;
-      transform: translateY(40px);
-      animation: cardIn 0.8s ease forwards;
-    }
-
-    .card:nth-child(1) { animation-delay: 0.3s; }
-    .card:nth-child(2) { animation-delay: 0.45s; }
-    .card:nth-child(3) { animation-delay: 0.6s; }
-    .card:nth-child(4) { animation-delay: 0.75s; }
-    .card:nth-child(5) { animation-delay: 0.9s; }
-    .card:nth-child(6) { animation-delay: 1.05s; }
-
-    @keyframes cardIn {
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card:hover {
-      transform: translateY(-10px) scale(1.02);
-      box-shadow: 0 20px 50px rgba(180, 130, 100, 0.18);
-      border-color: rgba(210, 160, 130, 0.5);
-    }
-
-    .card-img {
-      width: 100%;
-      height: 190px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 3.2rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card-img::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      opacity: 0.6;
-      transition: opacity 0.4s ease;
-    }
-
-    .card:hover .card-img::before { opacity: 0.8; }
-
-    .card-img .icon-wrap {
-      position: relative;
-      z-index: 1;
-      transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    }
-
-    .card:hover .icon-wrap { transform: scale(1.2) rotate(-5deg); }
-
-    /* card image color presets */
-    .card-img.warm    { background: linear-gradient(135deg, #f6d8b8, #f0c0a8); }
-    .card-img.rose    { background: linear-gradient(135deg, #f2d0d8, #e8b8d0); }
-    .card-img.lavender { background: linear-gradient(135deg, #ddd0f0, #c8b8e8); }
-    .card-img.mint    { background: linear-gradient(135deg, #c8e8d8, #b0dcc8); }
-    .card-img.peach   { background: linear-gradient(135deg, #fce4c8, #f8d0b0); }
-    .card-img.sky     { background: linear-gradient(135deg, #c8daf0, #b0c8e8); }
-
-    .card-body { padding: 22px 24px 24px; }
-
-    .card-body h3 {
-      font-size: 1.15rem;
-      color: #5c4a3a;
-      margin-bottom: 10px;
-      transition: color 0.3s;
-    }
-
-    .card:hover .card-body h3 { color: #c0896e; }
-
-    .card-body p {
-      font-size: 0.88rem;
-      line-height: 1.7;
-      color: #9a8a7a;
-      margin-bottom: 16px;
-    }
-
-    .card-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .card-tags span {
-      padding: 4px 12px;
-      font-size: 0.72rem;
-      border-radius: 20px;
-      background: linear-gradient(135deg, rgba(210,170,140,0.15), rgba(200,150,180,0.15));
-      color: #b08a70;
-      letter-spacing: 0.3px;
-      transition: all 0.3s;
-    }
-
-    .card:hover .card-tags span {
-      background: linear-gradient(135deg, rgba(210,170,140,0.28), rgba(200,150,180,0.28));
-    }
-
-    .card-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 16px;
-      color: #c0896e;
-      text-decoration: none;
-      font-size: 0.88rem;
-      transition: all 0.3s;
-    }
-
-    .card-link .arrow {
-      display: inline-block;
-      transition: transform 0.3s;
-    }
-
-    .card-link:hover { color: #a06848; }
-    .card-link:hover .arrow { transform: translateX(4px); }
-
-    /* ---- footer ---- */
-    footer {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-      padding: 0 20px 50px;
-      color: #c8b8a8;
-      font-size: 0.82rem;
-      letter-spacing: 1px;
-      animation: fadeDown 1s 0.6s ease both;
-    }
-
-    /* ---- responsive ---- */
-    @media (max-width: 640px) {
-      header { padding: 80px 16px 24px; }
-      header h1 { font-size: 2rem; }
-      .grid { padding: 30px 16px 80px; gap: 20px; }
-      .grid { grid-template-columns: 1fr; }
-    }
-  </style>
+        /* 🎵 音乐播放器动画 */
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .music-spin {
+            animation: spin-slow 4s linear infinite;
+        }
+    </style>
 </head>
 <body>
 
-  <!-- floating particles -->
-  <div class="particles" id="particles"></div>
+    <!-- 3D 渲染容器 -->
+    <div id="canvas-container"></div>
 
-  <a class="back-link" href="/">&larr; 返回博客</a>
+    <!-- 前端 UI 层 -->
+    <div id="ui-layer" class="p-6 md:p-10">
+        
+        <!-- 背景音乐 (加上 loop 属性循环播放) -->
+        <audio id="bgm" loop preload="auto">
+            <!-- 把 bgm.mp3 放到 source/portfolio/ 目录下即可 -->
+            <source src="bgm/Roco_Kingdom.mp3" type="audio/mpeg">
+        </audio>
 
-  <header>
-    <h1>My Portfolio</h1>
-    <p>记录每一份用心做的小作品</p>
-    <div class="divider"></div>
-  </header>
+        <!-- 头部标题 -->
+        <header class="flex justify-between items-start pointer-events-auto">
+            <div>
+                <h1 class="text-3xl md:text-5xl font-extrabold text-white drop-shadow-lg tracking-wide">我的奇妙星球</h1>
+                <p class="text-white/90 mt-2 text-sm md:text-base font-semibold drop-shadow-md">转动星球，发现散落各地的作品 🪐</p>
+            </div>
 
-  <div class="grid">
+            <div class="flex items-center gap-3">
+                <!-- 🎵 音乐控制按钮 -->
+                <button id="music-btn" class="relative w-12 h-12 flex items-center justify-center bg-white/40 hover:bg-white/70 backdrop-blur-md rounded-full shadow-lg transition-all border border-white/50 group">
+                    <span id="music-icon" class="text-2xl drop-shadow-md">🎵</span>
+                    <div id="music-slash" class="absolute w-8 h-[3px] bg-red-400/80 rounded-full rotate-45 transition-all origin-center"></div>
+                </button>
 
-    <!-- 作品卡片 1 -->
-    <div class="card">
-      <div class="card-img warm">
-        <span class="icon-wrap">🚀</span>
-      </div>
-      <div class="card-body">
-        <h3>示例项目 A</h3>
-        <p>这是一个示例项目，替换为你自己的作品描述。</p>
-        <div class="card-tags">
-          <span>HTML</span>
-          <span>CSS</span>
-          <span>JavaScript</span>
+                <!-- 拖动提示图标 -->
+                <div id="drag-hint" class="relative w-12 h-12 flex items-center justify-center bg-white/30 rounded-full backdrop-blur-sm transition-opacity duration-500">
+                    <div class="drag-hint-ring"></div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                    </svg>
+                </div>
+            </div>
+        </header>
+
+        <!-- 作品详情弹出面板 -->
+        <div id="project-panel" class="absolute top-[20%] left-10 w-80 md:w-96 rounded-3xl p-6 pointer-events-auto flex flex-col max-h-[70vh] overflow-y-auto">
+            
+            <div class="flex justify-between items-center mb-4">
+                <span id="panel-tag" class="px-3 py-1 rounded-full text-xs font-bold">Tag</span>
+                <button id="close-btn" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div id="panel-emoji" class="w-full h-32 rounded-2xl flex items-center justify-center text-6xl shadow-inner mb-4">
+                🎨
+            </div>
+
+            <h2 id="panel-title" class="text-2xl font-extrabold text-gray-800 mb-2">项目标题</h2>
+            <div class="w-10 h-1 bg-gradient-to-r from-[#FF9A8B] to-[#D4C4FB] rounded-full mb-4"></div>
+            
+            <p id="panel-desc" class="text-gray-600 text-sm leading-relaxed mb-4">
+                项目描述将在这里显示。
+            </p>
+            
+            <button class="mt-auto w-full py-3 rounded-xl bg-gradient-to-r from-[#FF9A8B] to-[#FFD3B6] text-white font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
+                探索详情
+            </button>
         </div>
-        <a class="card-link" href="#">查看详情 <span class="arrow">&rarr;</span></a>
-      </div>
+
+        <!-- 右侧快速导航列表：增加了 px-4 py-4 内边距防止放大时被裁切 -->
+        <div id="right-nav" class="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-3 pointer-events-auto z-20 max-h-[70vh] overflow-y-auto px-4 py-4">
+            <!-- 导航项会由 JS 动态生成填充在这里 -->
+        </div>
+
     </div>
 
-    <!-- 作品卡片 2 -->
-    <div class="card">
-      <div class="card-img rose">
-        <span class="icon-wrap">🎨</span>
-      </div>
-      <div class="card-body">
-        <h3>示例项目 B</h3>
-        <p>这是另一个示例项目，替换为你自己的作品描述。</p>
-        <div class="card-tags">
-          <span>Design</span>
-          <span>UI/UX</span>
-        </div>
-        <a class="card-link" href="#">查看详情 <span class="arrow">&rarr;</span></a>
-      </div>
-    </div>
+    <!-- 3D 逻辑脚本 -->
+    <script>
+        // --- 1. 项目数据准备 (附带星球经纬度坐标) ---
+        const projectsData = [
+            {
+                id: 1,
+                title: "云端日记本 App",
+                tag: "Web Design",
+                desc: "这是一款治愈系日记应用。它采用轻量级的架构，记录用户的每一个小情绪，并将它们化作云朵存储在“天空”中。使用了 React 和 TailwindCSS 构建。",
+                emoji: "🎨",
+                bgColor: "#FFD3B6",   // 面板背景色
+                tagColor: "#FFF5C3",  // 标签背景
+                tagText: "#FF9A8B",   // 标签文字
+                markerColor: 0xFF9A8B // 3D 坐标点颜色
+            },
+            {
+                id: 2,
+                title: "智能闲聊机器人小橘",
+                tag: "Algorithm",
+                desc: "基于大语言模型微调的性格陪伴机器人。设定是一只温暖的橘猫，会在深夜给你讲冷笑话。优化了上下文记忆和情感分析。",
+                emoji: "🤖",
+                bgColor: "#D4C4FB",
+                tagColor: "#E6E6FA",
+                tagText: "#8C75D8",
+                markerColor: 0xB099F0
+            },
+            {
+                id: 3,
+                title: "星空轨迹数据可视化",
+                tag: "Data Viz",
+                desc: "利用 D3.js 将繁杂的开源贡献数据转化为可视化的星空图。每一个提交就是一颗亮起的星星，连接起来形成属于开发者的星系。",
+                emoji: "📊",
+                bgColor: "#A0E8AF",
+                tagColor: "#DDF4E4",
+                tagText: "#5CBA76",
+                markerColor: 0x5CBA76
+            },
+            {
+                id: 4,
+                title: "深夜咖啡馆概念店",
+                tag: "UI/UX",
+                desc: "模拟深夜营业的线上咖啡馆，用户可以点选白噪音进行番茄钟专注。大量采用了温暖的木质色调与拟物化的阴影效果。",
+                emoji: "☕",
+                bgColor: "#FFB6B9",
+                tagColor: "#FAE3D9",
+                tagText: "#E87A80",
+                markerColor: 0xE87A80
+            },
+            {
+                id: 5,
+                title: "新添加的魔法作品",
+                tag: "New Magic",
+                desc: "你看！这是我刚刚添加的新作品。由于使用了斐波那契球面算法，所有的作品坐标都会被自动重新计算，永远均匀、漂亮地散落在星球上！",
+                emoji: "✨",
+                bgColor: "#FDE047",
+                tagColor: "#FEF08A",
+                tagText: "#CA8A04",
+                markerColor: 0xFDE047
+            }
+        ];
 
-    <!-- 作品卡片 3 -->
-    <div class="card">
-      <div class="card-img lavender">
-        <span class="icon-wrap">✨</span>
-      </div>
-      <div class="card-body">
-        <h3>示例项目 C</h3>
-        <p>这是第三个示例项目，替换为你自己的作品描述。</p>
-        <div class="card-tags">
-          <span>Vue</span>
-          <span>Node.js</span>
-        </div>
-        <a class="card-link" href="#">查看详情 <span class="arrow">&rarr;</span></a>
-      </div>
-    </div>
+        // --- 2. Three.js 场景初始化 ---
+        window.onload = function() {
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            
+            // 摄像机
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, 160); // 初始摄像机距离
 
-    <!--
-    更多卡片模板 - 复制修改即可
-    可选的 card-img 配色: warm / rose / lavender / mint / peach / sky
+            // 渲染器 (背景透明以显示 CSS 渐变)
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 优化高清屏
+            container.appendChild(renderer.domElement);
 
-    <div class="card">
-      <div class="card-img mint">
-        <span class="icon-wrap">🌿</span>
-      </div>
-      <div class="card-body">
-        <h3>项目名称</h3>
-        <p>项目描述</p>
-        <div class="card-tags">
-          <span>标签</span>
-        </div>
-        <a class="card-link" href="#">查看详情 <span class="arrow">&rarr;</span></a>
-      </div>
-    </div>
-    -->
+            // 控制器 (用于鼠标拖动旋转)
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true; // 平滑阻尼感
+            controls.dampingFactor = 0.05;
+            controls.enablePan = false;    // 禁止平移
+            controls.minDistance = 100;    // 最小缩放
+            controls.maxDistance = 250;    // 最大缩放
+            // 默认缓慢自转，吸引用户交互
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 1.0;
 
-  </div>
+            // --- 3. 添加灯光 ---
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); // 柔和的环境光
+            scene.add(ambientLight);
 
-  <footer>
-    <p>- with love -</p>
-  </footer>
+            const dirLight = new THREE.DirectionalLight(0xffe4b5, 0.8); // 更温暖的夕阳主光源
+            dirLight.position.set(50, 50, 50);
+            scene.add(dirLight);
 
-  <script>
-    // Generate warm floating particles
-    const container = document.getElementById('particles');
-    const colors = [
-      'rgba(220,180,150,0.35)',
-      'rgba(210,160,180,0.30)',
-      'rgba(180,170,210,0.25)',
-      'rgba(200,190,160,0.30)',
-      'rgba(230,200,170,0.35)',
-    ];
+            const backLight = new THREE.DirectionalLight(0x9faacc, 0.6); // 暮色冷光补光
+            backLight.position.set(-50, -50, -50);
+            scene.add(backLight);
 
-    for (let i = 0; i < 25; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      const size = Math.random() * 10 + 4;
-      p.style.cssText = `
-        width: ${size}px;
-        height: ${size}px;
-        left: ${Math.random() * 100}%;
-        background: ${colors[Math.floor(Math.random() * colors.length)]};
-        animation-duration: ${Math.random() * 12 + 10}s;
-        animation-delay: ${Math.random() * 10}s;
-      `;
-      container.appendChild(p);
-    }
-  </script>
+            // --- 4. 创建可爱低多边形星球 ---
+            const planetRadius = 50;
+            // detail: 2 使得球体有一些多边形的棱角，看起来像纸模/低多边形风格
+            const planetGeometry = new THREE.IcosahedronGeometry(planetRadius, 2); 
+            const planetMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xDFA9DA, // 改为充满梦幻感的粉紫色
+                flatShading: true, // 开启平滑着色产生多边形效果
+                roughness: 0.8,
+                metalness: 0.1
+            });
+            const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+            scene.add(planet);
 
+            // --- 4.5 添加可爱的 3D 小物件 (胖胖星、爱心、小土星、小云朵) ---
+            const floatingGroup = new THREE.Group();
+            scene.add(floatingGroup);
+            const cuteObjects = [];
+            
+            // 糖果色系：鹅黄、亮粉、薄荷绿、浅紫、甜橙、纯白
+            const cuteColors = [0xFFE066, 0xFF9EBB, 0x88D8B0, 0xC0A9E6, 0xFFB370, 0xFFFFFF];
+            
+            // 将小物件的数量调整为 25，恰到好处的丰富感
+            for(let i = 0; i < 25; i++) {
+                const type = Math.floor(Math.random() * 4);
+                const color = cuteColors[Math.floor(Math.random() * cuteColors.length)];
+                const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.4, metalness: 0.1, flatShading: true });
+                let mesh;
+
+                if (type === 0) {
+                    // 真正的胖胖五角星 (用 Shape 绘制)
+                    const starShape = new THREE.Shape();
+                    const outerRadius = 2.5;
+                    const innerRadius = 1.2;
+                    const numPoints = 5;
+                    for(let j = 0; j < numPoints * 2; j++) {
+                        const r = j % 2 === 0 ? outerRadius : innerRadius;
+                        // 让星星的角朝上
+                        const angle = (j / (numPoints * 2)) * Math.PI * 2 - Math.PI / 2; 
+                        const sx = Math.cos(angle) * r;
+                        const sy = Math.sin(angle) * r;
+                        if(j === 0) starShape.moveTo(sx, sy);
+                        else starShape.lineTo(sx, sy);
+                    }
+                    // 挤压出厚度，并加上圆角(bevel)
+                    const extrudeSettings = { depth: 0.6, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.3, bevelThickness: 0.3 };
+                    const geom = new THREE.ExtrudeGeometry(starShape, extrudeSettings);
+                    geom.center();
+                    mesh = new THREE.Mesh(geom, mat);
+                    mesh.scale.set(0.5, 0.5, 0.5);
+                } else if (type === 1) {
+                    // 迷你可爱小土星
+                    mesh = new THREE.Group();
+                    const sphere = new THREE.Mesh(new THREE.SphereGeometry(1.2, 32, 32), mat);
+                    const ringMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.7, roughness: 0.1 });
+                    const ring = new THREE.Mesh(new THREE.TorusGeometry(2, 0.25, 16, 32), ringMat);
+                    ring.rotation.x = Math.PI / 2.2;
+                    mesh.add(sphere);
+                    mesh.add(ring);
+                } else if (type === 2) {
+                    // 胖乎乎的立体爱心
+                    const x = 0, y = 0;
+                    const heartShape = new THREE.Shape();
+                    heartShape.moveTo( x + 5, y + 5 );
+                    heartShape.bezierCurveTo( x + 5, y + 5, x + 4, y, x, y );
+                    heartShape.bezierCurveTo( x - 6, y, x - 6, y + 7,x - 6, y + 7 );
+                    heartShape.bezierCurveTo( x - 6, y + 11, x - 3, y + 15.4, x + 5, y + 19 );
+                    heartShape.bezierCurveTo( x + 12, y + 15.4, x + 16, y + 11, x + 16, y + 7 );
+                    heartShape.bezierCurveTo( x + 16, y + 7, x + 16, y, x + 10, y );
+                    heartShape.bezierCurveTo( x + 7, y, x + 5, y + 5, x + 5, y + 5 );
+                    const geom = new THREE.ExtrudeGeometry(heartShape, { depth: 1.5, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.6, bevelThickness: 0.6 });
+                    geom.center(); 
+                    mesh = new THREE.Mesh(geom, mat);
+                    mesh.scale.set(0.12, 0.12, 0.12);
+                    mesh.rotation.z = Math.PI; // 翻转摆正
+                } else {
+                    // 治愈系蓬松小云朵 (用多个球体组合)
+                    mesh = new THREE.Group();
+                    const p1 = new THREE.Mesh(new THREE.SphereGeometry(1.2, 32, 32), mat);
+                    const p2 = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mat);
+                    p2.position.set(1.1, -0.3, 0);
+                    const p3 = new THREE.Mesh(new THREE.SphereGeometry(0.9, 32, 32), mat);
+                    p3.position.set(-1.0, -0.2, 0);
+                    const p4 = new THREE.Mesh(new THREE.SphereGeometry(0.7, 32, 32), mat);
+                    p4.position.set(0.2, 0.5, 0.4); 
+                    mesh.add(p1, p2, p3, p4);
+                    mesh.scale.set(0.8, 0.8, 0.8);
+                }
+
+                // 随机位置 (距离星球表面有一段距离，营造出丰富的太空感)
+                const radius = planetRadius + 15 + Math.random() * 40;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos((Math.random() * 2) - 1);
+                
+                mesh.position.x = radius * Math.sin(phi) * Math.cos(theta);
+                mesh.position.y = radius * Math.cos(phi);
+                mesh.position.z = radius * Math.sin(phi) * Math.sin(theta);
+                
+                // 随机初始旋转
+                mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                
+                // 存储每个小物件独立的自转速度
+                mesh.userData = {
+                    rotX: (Math.random() - 0.5) * 0.02,
+                    rotY: (Math.random() - 0.5) * 0.02,
+                    rotZ: (Math.random() - 0.5) * 0.02
+                };
+
+                floatingGroup.add(mesh);
+                cuteObjects.push(mesh);
+            }
+
+            // --- 5. 自动计算坐标并生成作品坐标点 (Markers) ---
+            const markers = []; // 用于后续射线检测
+            const markerMeshes = new THREE.Group();
+            scene.add(markerMeshes);
+
+            // 使用“斐波那契球面算法 (Fibonacci Sphere)”自动均匀分布坐标点
+            const numProjects = projectsData.length;
+            const goldenRatio = (1 + Math.sqrt(5)) / 2;
+            const angleIncrement = Math.PI * 2 * goldenRatio;
+
+            projectsData.forEach((project, i) => {
+                // 坐标点的主体 (发光的小球)
+                const markerGeo = new THREE.SphereGeometry(2.5, 16, 16);
+                const markerMat = new THREE.MeshBasicMaterial({ color: project.markerColor });
+                const markerMesh = new THREE.Mesh(markerGeo, markerMat);
+
+                // 坐标点的外环 (增加选中感)
+                const ringGeo = new THREE.TorusGeometry(4, 0.4, 8, 24);
+                const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
+                const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+                
+                // 组合
+                const markerGroup = new THREE.Group();
+                markerGroup.add(markerMesh);
+                markerGroup.add(ringMesh);
+
+                // 算法核心：无论你有多少个作品，自动将其均匀包裹在星球表面
+                // 稍微偏移一下起始点 (i + 0.5) 让分布更自然
+                const t = (i + 0.5) / numProjects;
+                const inclination = Math.acos(1 - 2 * t); // 倾角
+                const azimuth = angleIncrement * i;       // 方位角
+
+                const x = planetRadius * Math.sin(inclination) * Math.cos(azimuth);
+                const y = planetRadius * Math.cos(inclination);
+                const z = planetRadius * Math.sin(inclination) * Math.sin(azimuth);
+                
+                const pos = new THREE.Vector3(x, y, z);
+                markerGroup.position.copy(pos);
+                
+                // 让圆环贴合球面：使对象朝向星球中心 (原点)
+                markerGroup.lookAt(new THREE.Vector3(0,0,0));
+
+                // 保存数据用于点击事件
+                markerMesh.userData = project;
+                markerMesh.userData.parentGroup = markerGroup;
+
+                markerMeshes.add(markerGroup);
+                markers.push(markerMesh);
+            });
+
+            // 添加背景星空粒子
+            const starsGeometry = new THREE.BufferGeometry();
+            // 将 3D 星星调成暖黄色，并稍微调大一点点，配合温馨的背景
+            const starsMaterial = new THREE.PointsMaterial({color: 0xFFF5C3, size: 0.8, transparent: true, opacity: 0.9});
+            const starsVertices = [];
+            for(let i=0; i<500; i++) {
+                const x = (Math.random() - 0.5) * 1000;
+                const y = (Math.random() - 0.5) * 1000;
+                const z = (Math.random() - 0.5) * 1000;
+                // 避开中间的星球区域
+                if (Math.abs(x) < 100 && Math.abs(y) < 100 && Math.abs(z) < 100) continue;
+                starsVertices.push(x, y, z);
+            }
+            starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+            const starField = new THREE.Points(starsGeometry, starsMaterial);
+            scene.add(starField);
+
+            // --- 7. 交互逻辑 (射线检测与 UI 更新) ---
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            let isPointerDown = false; // 新增：记录鼠标是否按下
+            let isDragging = false;
+            let mouseDownPos = {x: 0, y: 0};
+            let currentHoveredProject = null; // 新增：记录当前悬停的项目ID，避免动画重复触发
+            let pinnedProject = null; // 新增：记录被点击固定的项目
+
+            // 监听鼠标/触摸按下，判断是否是在拖动
+            window.addEventListener('pointerdown', (e) => {
+                isPointerDown = true;
+                isDragging = false;
+                mouseDownPos.x = e.clientX;
+                mouseDownPos.y = e.clientY;
+                
+                // 用户开始交互后，停止自动旋转，隐藏提示
+                controls.autoRotate = false;
+                document.getElementById('drag-hint').style.opacity = '0';
+            });
+
+            // 监听鼠标/触摸移动
+            window.addEventListener('pointermove', (e) => {
+                // 修复逻辑：只有在鼠标按下的前提下移动，才算是拖拽
+                if (isPointerDown) {
+                    if (Math.abs(e.clientX - mouseDownPos.x) > 5 || Math.abs(e.clientY - mouseDownPos.y) > 5) {
+                        isDragging = true;
+                    }
+                }
+                
+                // Hover 效果 (改变鼠标指针)
+                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(markers);
+                
+                if (intersects.length > 0) {
+                    document.body.style.cursor = 'pointer';
+                    // 简单的 hover 放大特效
+                    intersects[0].object.scale.set(1.2, 1.2, 1.2);
+
+                    // 鼠标没有按下 (e.buttons === 0)，并且当前没有固定的卡片时，悬停自动弹出卡片
+                    if (e.buttons === 0 && !pinnedProject) {
+                        const selectedProject = intersects[0].object.userData;
+                        
+                        // 只有悬停到新的作品上才触发，避免一秒钟触发60次导致卡顿
+                        if (currentHoveredProject !== selectedProject.id) {
+                            currentHoveredProject = selectedProject.id;
+                            showProjectPanel(selectedProject);
+                            
+                            // 悬停时也触发一下坐标的弹跳动画，增加反馈感
+                            const parentGroup = selectedProject.parentGroup;
+                            gsap.fromTo(parentGroup.scale, 
+                                {x: 0.5, y: 0.5, z: 0.5}, 
+                                {x: 1, y: 1, z: 1, duration: 0.8, ease: "elastic.out(1, 0.3)"}
+                            );
+                        }
+                    }
+                } else {
+                    document.body.style.cursor = 'default';
+                    markers.forEach(m => m.scale.set(1, 1, 1)); // 恢复大小
+                    
+                    if (currentHoveredProject !== null) {
+                        currentHoveredProject = null; // 鼠标移出时重置记录
+                        // 如果当前没有项目被“固定”，鼠标移出就隐藏卡片
+                        if (!pinnedProject) {
+                            panel.classList.remove('active');
+                        }
+                    }
+                }
+            });
+
+            // 监听点击/抬起
+            window.addEventListener('pointerup', (e) => {
+                isPointerDown = false; // 鼠标抬起，重置按下状态
+                if (isDragging) {
+                    isDragging = false; // 如果刚才在拖动，则不触发点击，并重置状态
+                    return; 
+                }
+
+                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+
+                // 检测是否点击了作品坐标
+                const intersects = raycaster.intersectObjects(markers);
+                if (intersects.length > 0) {
+                    const selectedProject = intersects[0].object.userData;
+                    
+                    // 使用新的统一函数：点击后将卡片常驻，并转动镜头
+                    focusOnProject(selectedProject);
+                    
+                } else {
+                    // 如果点击了宇宙的空白处，则取消常驻并隐藏卡片
+                    pinnedProject = null;
+                    panel.classList.remove('active');
+                    // 恢复自转
+                    controls.autoRotate = true; 
+                }
+            });
+
+            // UI 元素获取
+            const panel = document.getElementById('project-panel');
+            const pTag = document.getElementById('panel-tag');
+            const pTitle = document.getElementById('panel-title');
+            const pDesc = document.getElementById('panel-desc');
+            const pEmoji = document.getElementById('panel-emoji');
+            const closeBtn = document.getElementById('close-btn');
+            const rightNav = document.getElementById('right-nav');
+
+            // --- 6. 动态生成右侧导航列表 ---
+            projectsData.forEach((project) => {
+                const navItem = document.createElement('button');
+                navItem.className = 'flex items-center gap-3 p-2 pr-4 bg-white/60 hover:bg-white/90 backdrop-blur-md rounded-full shadow-sm transition-all hover:scale-105 hover:shadow-md border border-white/50 group';
+                navItem.innerHTML = `
+                    <span class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-inner text-sm group-hover:rotate-12 transition-transform">${project.emoji}</span>
+                    <span class="text-sm font-bold text-gray-700 whitespace-nowrap">${project.title}</span>
+                `;
+                
+                // 点击导航项，触发镜头追踪和卡片展示
+                navItem.addEventListener('click', () => {
+                    focusOnProject(project);
+                });
+                
+                rightNav.appendChild(navItem);
+            });
+
+            // 镜头追踪并展示卡片的核心函数
+            function focusOnProject(project) {
+                // 1. 设置常驻状态并展示卡片
+                pinnedProject = project;
+                showProjectPanel(project);
+                
+                // 2. 坐标点弹跳特效
+                const parentGroup = project.parentGroup;
+                gsap.fromTo(parentGroup.scale, 
+                    {x: 0.5, y: 0.5, z: 0.5}, 
+                    {x: 1, y: 1, z: 1, duration: 0.8, ease: "elastic.out(1, 0.3)"}
+                );
+
+                // 3. 镜头平滑旋转到该坐标正前方
+                // 计算摄像机应该在的位置 (保持当前距离，但方向指向坐标点)
+                const currentDistance = camera.position.distanceTo(controls.target);
+                const targetCameraPos = parentGroup.position.clone().normalize().multiplyScalar(currentDistance);
+
+                // 停止自动旋转
+                controls.autoRotate = false;
+                
+                // 使用 GSAP 平滑移动摄像机
+                gsap.to(camera.position, {
+                    x: targetCameraPos.x,
+                    y: targetCameraPos.y,
+                    z: targetCameraPos.z,
+                    duration: 1.2,
+                    ease: "power3.inOut",
+                    onUpdate: () => controls.update() // 在动画过程中实时更新控制器
+                });
+            }
+
+            // 显示面板函数
+            function showProjectPanel(data) {
+                // 填充数据
+                pTag.innerText = data.tag;
+                pTag.style.backgroundColor = data.tagColor;
+                pTag.style.color = data.tagText;
+                
+                pTitle.innerText = data.title;
+                pDesc.innerText = data.desc;
+                
+                pEmoji.innerText = data.emoji;
+                pEmoji.style.background = `linear-gradient(135deg, ${data.bgColor}, #ffffff)`;
+
+                // 弹出动画
+                panel.classList.add('active');
+            }
+
+            // 关闭面板
+            closeBtn.addEventListener('click', () => {
+                pinnedProject = null; // 取消常驻状态
+                currentHoveredProject = null;
+                panel.classList.remove('active');
+            });
+
+            // --- 8. 窗口尺寸调整自适应 ---
+            window.addEventListener('resize', onWindowResize, false);
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            // --- 10. 🌟 Q弹入场动画 ---
+            // 使用 GSAP 让星球、坐标点和小物件依次 Q弹 放大出现
+            gsap.from([planet.scale, markerMeshes.scale, floatingGroup.scale], {
+                x: 0, y: 0, z: 0,
+                duration: 2.5,
+                ease: "elastic.out(1, 0.4)", // 1是振幅，0.4是阻尼，阻尼越小越Q弹
+                stagger: 0.2, // 各个元素依次出现的间隔时间
+                delay: 0.2
+            });
+
+            // 顶部标题栏整体下拉淡入（音乐按钮已在 header 内，无需单独动画）
+            gsap.from("header", {
+                y: -40,
+                opacity: 0,
+                duration: 1.5,
+                ease: "power3.out",
+                delay: 1.0
+            });
+
+            // --- 11. 🎵 音乐控制逻辑 ---
+            const bgm = document.getElementById('bgm');
+            const musicBtn = document.getElementById('music-btn');
+            const musicIcon = document.getElementById('music-icon');
+            const musicSlash = document.getElementById('music-slash');
+            let isMusicPlaying = false;
+
+            // 设置较低的初始音量，营造温馨氛围，不喧宾夺主 (范围 0.0 到 1.0)
+            bgm.volume = 0.3;
+
+            function toggleMusic() {
+                if (isMusicPlaying) {
+                    bgm.pause();
+                    musicIcon.classList.remove('music-spin');
+                    musicSlash.style.transform = 'scale(1) rotate(45deg)';
+                    musicSlash.style.opacity = '1';
+                } else {
+                    bgm.play().catch(e => console.log("等待用户交互后播放"));
+                    musicIcon.classList.add('music-spin');
+                    musicSlash.style.transform = 'scale(0) rotate(45deg)';
+                    musicSlash.style.opacity = '0';
+                }
+                isMusicPlaying = !isMusicPlaying;
+            }
+
+            musicBtn.addEventListener('click', toggleMusic);
+
+            // 浏览器策略：第一次点击屏幕任何地方时，自动尝试播放音乐 (如果还没播放的话)
+            window.addEventListener('pointerdown', function initAudio(e) {
+                // 如果用户直接点的是音乐按钮，就让按钮自己的事件去处理，避免冲突
+                if (e.target.closest('#music-btn')) return; 
+                
+                if (!isMusicPlaying) {
+                    toggleMusic();
+                }
+                // 触发一次后移除监听
+                window.removeEventListener('pointerdown', initAudio);
+            });
+
+            // --- 9. 动画循环 ---
+            const clock = new THREE.Clock();
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                const delta = clock.getDelta();
+                
+                // 更新控制器
+                controls.update();
+                
+                // 让背景星星缓缓转动
+                starField.rotation.y += 0.0005;
+                
+                // 让可爱的 3D 小物件群体整体缓缓反向公转
+                floatingGroup.rotation.y -= 0.0008; 
+                floatingGroup.rotation.z += 0.0004;
+                
+                // 让每一个小物件自己保持自转
+                cuteObjects.forEach(obj => {
+                    obj.rotation.x += obj.userData.rotX;
+                    obj.rotation.y += obj.userData.rotY;
+                    obj.rotation.z += obj.userData.rotZ;
+                });
+
+                // 让坐标的外环产生呼吸缩放效果
+                const time = Date.now() * 0.003;
+                markerMeshes.children.forEach(group => {
+                    const ring = group.children[1]; // 假设第二个 child 是外环
+                    if(ring) {
+                        const scale = 1 + Math.sin(time) * 0.15;
+                        ring.scale.set(scale, scale, scale);
+                    }
+                });
+
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+        };
+    </script>
 </body>
 </html>
