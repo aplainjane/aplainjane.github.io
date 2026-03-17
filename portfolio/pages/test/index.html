@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云端日记本 - 作品详情</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Nunito', sans-serif;
+            /* 完美继承主页的星空背景 */
+            background-color: #2b1b4d;
+            background-image: 
+                radial-gradient(2px 2px at 15% 20%, #FFF5C3 100%, transparent 0),
+                radial-gradient(2px 2px at 75% 15%, #FFFFFF 100%, transparent 0),
+                radial-gradient(3px 3px at 85% 45%, #FFD3B6 100%, transparent 0),
+                radial-gradient(2px 2px at 25% 65%, #FFFFFF 100%, transparent 0),
+                radial-gradient(3px 3px at 60% 80%, #D4C4FB 100%, transparent 0),
+                radial-gradient(2px 2px at 10% 90%, #FFF5C3 100%, transparent 0),
+                radial-gradient(circle at 15% 30%, rgba(255, 182, 185, 0.3) 0%, transparent 40%),
+                radial-gradient(circle at 85% 60%, rgba(212, 196, 251, 0.25) 0%, transparent 40%),
+                radial-gradient(circle at 50% 80%, rgba(255, 245, 195, 0.2) 0%, transparent 50%),
+                linear-gradient(to bottom, #2B1B4D 0%, #694A74 40%, #B87B8F 75%, #F4D0B4 100%);
+            background-size: 
+                250px 250px, 300px 300px, 200px 200px, 350px 350px, 400px 400px, 250px 250px, 
+                100% 100%, 100% 100%, 100% 100%, 100% 100%;
+            background-repeat: repeat, repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+            background-attachment: fixed;
+            color: #4A5568;
+        }
+
+        /* 隐藏默认滚动条，使用可爱风格 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.5); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.8); }
+
+        /* 磨砂玻璃卡片主容器 */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 4px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 25px 50px -12px rgba(43, 27, 77, 0.3), 0 0 40px rgba(255, 255, 255, 0.4) inset;
+        }
+
+        /* 悬浮动画 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* 入场动画 */
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up {
+            animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* 排版美化 */
+        .prose h3 {
+            color: #694A74;
+            font-weight: 800;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .prose p {
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            color: #5a6475;
+        }
+        .prose ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-bottom: 1.5rem;
+        }
+        .prose ul li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #5a6475;
+            line-height: 1.6;
+        }
+        .prose ul li::before {
+            content: '✨';
+            position: absolute;
+            left: 0;
+            top: 0px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen relative pb-20">
+
+    <!-- 顶部导航条 -->
+    <nav class="fixed top-0 left-0 w-full z-50 p-6 flex justify-between items-center fade-up" style="animation-delay: 0.1s;">
+        <!-- 返回按钮 -->
+        <a href="/portfolio/" class="flex items-center gap-2 px-5 py-2.5 bg-white/40 hover:bg-white/80 backdrop-blur-md rounded-full shadow-lg transition-all text-[#694A74] font-bold border border-white/50 group no-underline">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            返回奇妙星球
+        </a>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="max-w-4xl mx-auto pt-24 px-4 sm:px-6 lg:px-8 relative z-10">
+        
+        <!-- 文章容器 (Glassmorphism) -->
+        <article class="glass-container rounded-[2.5rem] p-8 md:p-14 fade-up" style="animation-delay: 0.2s;">
+            
+            <!-- 头部：Emoji与标题 -->
+            <header class="text-center mb-12">           
+                <div class="flex justify-center gap-2 mb-4">
+                    <span class="px-4 py-1.5 bg-[#FFF5C3] text-[#FF9A8B] rounded-full text-sm font-extrabold shadow-sm">Web Design</span>
+                    <span class="px-4 py-1.5 bg-[#E6E6FA] text-[#8C75D8] rounded-full text-sm font-extrabold shadow-sm">React</span>
+                </div>
+
+                <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#FF9A8B] via-[#D4C4FB] to-[#8C75D8] mb-4 pb-2">
+                    云端日记本 App
+                </h1>
+                <p class="text-lg text-gray-500 font-medium max-w-2xl mx-auto">
+                    把你的小情绪，变成天空中最柔软的云朵。一个专注于治愈和情绪记录的轻量级 Web 应用。
+                </p>
+            </header>
+
+            <!-- 分割线 -->
+            <div class="w-24 h-1.5 bg-gradient-to-r from-[#FF9A8B] to-[#D4C4FB] rounded-full mx-auto mb-12 opacity-70"></div>
+
+            <!-- 正文内容区 -->
+            <div class="prose max-w-none text-base md:text-lg">
+                
+                <!-- 大图占位 (也可以放 GIF 演示) -->
+                <div class="w-full aspect-video bg-white/60 rounded-3xl border-2 border-white/80 shadow-inner flex items-center justify-center mb-12 overflow-hidden relative group">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-[#FFD3B6]/40 to-[#D4C4FB]/40"></div>
+                    <span class="text-gray-400 font-bold z-10 flex flex-col items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        项目界面截图 / 演示 GIF
+                    </span>
+                </div>
+
+                <h3><span>🔭</span> 诞生的故事</h3>
+                <p>
+                    在快节奏的现代生活中，我们经常会感到焦虑和疲惫。我开发这款“云端日记本”的初衷，是希望能在互联网的某个角落，为大家提供一个绝对安全、柔软且治愈的树洞。在这里，你不需要排版，不需要完美的文笔，只需记录下当下的情绪碎片。
+                </p>
+
+                <h3><span>🎯</span> 核心魔法（功能亮点）</h3>
+                <ul>
+                    <li><strong>情绪天气系统：</strong> 用户在记录日记时可以选择当前的情绪，系统会自动将情绪映射为不同颜色和形状的“云朵”。</li>
+                    <li><strong>沉浸式白噪音：</strong> 内置了雨声、篝火、森林等多种高质量白噪音，开启日记本的瞬间即刻放松。</li>
+                    <li><strong>时光信箱：</strong> 支持写一封“给未来自己的信”，它将在你设定的那一天像流星一样降落在你的屏幕上。</li>
+                    <li><strong>隐私至上：</strong> 所有的日记数据默认在本地浏览器加密存储，也可以选择同步到个人的云端。</li>
+                </ul>
+
+                <!-- 强调卡片 -->
+                <div class="bg-gradient-to-r from-[#FFF5C3]/40 to-[#FFD3B6]/40 p-6 rounded-2xl border border-white my-8 text-[#E87A80]">
+                    <strong>💡 设计思考：</strong>
+                    为了营造极致的治愈感，我在 UI 上彻底摒弃了直角和纯黑色。所有的按钮都像果冻一样柔软，阴影使用了带有扩散的大范围有色弥散阴影，仿佛页面在微微发光。
+                </div>
+
+                <h3><span>🛠️</span> 打造飞船的工具（技术栈）</h3>
+                <div class="flex flex-wrap gap-3 mt-4 mb-8">
+                    <!-- 技术标签 -->
+                    <span class="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-100 text-gray-600 font-bold text-sm flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span> React.js
+                    </span>
+                    <span class="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-100 text-gray-600 font-bold text-sm flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-teal-400"></span> Tailwind CSS
+                    </span>
+                    <span class="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-100 text-gray-600 font-bold text-sm flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-yellow-400"></span> Framer Motion
+                    </span>
+                    <span class="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-100 text-gray-600 font-bold text-sm flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-purple-400"></span> Firebase
+                    </span>
+                </div>
+            </div>
+
+            <!-- 底部操作区 -->
+            <div class="mt-16 pt-8 border-t-2 border-white/50 flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#" class="px-8 py-4 bg-gradient-to-r from-[#FF9A8B] to-[#FFD3B6] text-white rounded-2xl font-extrabold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-center no-underline flex items-center justify-center gap-2">
+                    <span>🚀</span> 去看线上作品
+                </a>
+                <a href="#" class="px-8 py-4 bg-white/60 hover:bg-white text-[#694A74] rounded-2xl font-extrabold shadow-sm hover:shadow-md transition-all border border-white text-center no-underline flex items-center justify-center gap-2">
+                    <span>💻</span> 查看 GitHub 源码
+                </a>
+            </div>
+
+        </article>
+
+    </main>
+
+    <!-- 背景悬浮的装饰小星星 (纯 CSS 动画) -->
+    <div class="fixed top-20 right-20 text-3xl animate-float opacity-80 pointer-events-none" style="animation-delay: 0s;">✨</div>
+    <div class="fixed bottom-20 left-10 text-4xl animate-float opacity-60 pointer-events-none" style="animation-delay: 1.5s;">☁️</div>
+    <div class="fixed top-1/2 right-10 text-2xl animate-float opacity-70 pointer-events-none" style="animation-delay: 0.8s;">🪐</div>
+
+</body>
+</html>
