@@ -5,145 +5,380 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>作品集 | 去远方</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #0f0f1a;
-      color: #e0e0e0;
+      font-family: 'Noto Serif SC', Georgia, serif;
+      background: #fdf6ee;
+      color: #5c4a3a;
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
+    /* ---- floating particles ---- */
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0;
+      animation: floatUp linear infinite;
+    }
+
+    @keyframes floatUp {
+      0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+      10%  { opacity: 0.6; }
+      90%  { opacity: 0.6; }
+      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+    }
+
+    /* ---- back link ---- */
+    .back-link {
+      position: fixed;
+      top: 28px;
+      left: 28px;
+      color: #c0896e;
+      text-decoration: none;
+      font-size: 0.95rem;
+      z-index: 100;
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(8px);
+      padding: 8px 18px;
+      border-radius: 24px;
+      box-shadow: 0 2px 12px rgba(180,140,100,0.12);
+      transition: all 0.3s ease;
+      letter-spacing: 0.5px;
+    }
+
+    .back-link:hover {
+      background: #c0896e;
+      color: #fff;
+      transform: scale(1.05);
+    }
+
+    /* ---- header ---- */
     header {
+      position: relative;
+      z-index: 1;
       text-align: center;
-      padding: 80px 20px 40px;
+      padding: 100px 20px 30px;
+      animation: fadeDown 1s ease both;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     header h1 {
-      font-size: 2.5rem;
+      font-size: 2.8rem;
       font-weight: 700;
-      margin-bottom: 12px;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+      background: linear-gradient(135deg, #d4956a, #c07a9f, #8c7ab5);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
     }
 
     header p {
-      font-size: 1.1rem;
-      opacity: 0.6;
+      font-size: 1.05rem;
+      color: #b09a8a;
+      letter-spacing: 2px;
     }
 
-    .back-link {
-      position: fixed;
-      top: 24px;
-      left: 24px;
-      color: #667eea;
-      text-decoration: none;
-      font-size: 0.95rem;
-      opacity: 0.8;
-      transition: opacity 0.2s;
-      z-index: 100;
+    .divider {
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #e8c4a0, #d4a0c0);
+      border-radius: 4px;
+      margin: 28px auto 0;
+      animation: scaleIn 1s 0.4s ease both;
     }
 
-    .back-link:hover { opacity: 1; }
+    @keyframes scaleIn {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
 
+    /* ---- grid ---- */
     .grid {
+      position: relative;
+      z-index: 1;
       max-width: 1100px;
       margin: 0 auto;
-      padding: 20px 24px 80px;
+      padding: 40px 24px 100px;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 24px;
+      gap: 28px;
     }
 
+    /* ---- card ---- */
     .card {
-      background: #1a1a2e;
-      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(210, 180, 155, 0.3);
+      border-radius: 20px;
       overflow: hidden;
-      transition: transform 0.3s, box-shadow 0.3s;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      opacity: 0;
+      transform: translateY(40px);
+      animation: cardIn 0.8s ease forwards;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.3s; }
+    .card:nth-child(2) { animation-delay: 0.45s; }
+    .card:nth-child(3) { animation-delay: 0.6s; }
+    .card:nth-child(4) { animation-delay: 0.75s; }
+    .card:nth-child(5) { animation-delay: 0.9s; }
+    .card:nth-child(6) { animation-delay: 1.05s; }
+
+    @keyframes cardIn {
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 32px rgba(102, 126, 234, 0.2);
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 20px 50px rgba(180, 130, 100, 0.18);
+      border-color: rgba(210, 160, 130, 0.5);
     }
 
     .card-img {
       width: 100%;
-      height: 180px;
-      background: linear-gradient(135deg, #1e1e30, #2a2a4a);
+      height: 190px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 3rem;
+      font-size: 3.2rem;
+      position: relative;
+      overflow: hidden;
     }
 
-    .card-body {
-      padding: 20px;
+    .card-img::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.6;
+      transition: opacity 0.4s ease;
     }
+
+    .card:hover .card-img::before { opacity: 0.8; }
+
+    .card-img .icon-wrap {
+      position: relative;
+      z-index: 1;
+      transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .card:hover .icon-wrap { transform: scale(1.2) rotate(-5deg); }
+
+    /* card image color presets */
+    .card-img.warm    { background: linear-gradient(135deg, #f6d8b8, #f0c0a8); }
+    .card-img.rose    { background: linear-gradient(135deg, #f2d0d8, #e8b8d0); }
+    .card-img.lavender { background: linear-gradient(135deg, #ddd0f0, #c8b8e8); }
+    .card-img.mint    { background: linear-gradient(135deg, #c8e8d8, #b0dcc8); }
+    .card-img.peach   { background: linear-gradient(135deg, #fce4c8, #f8d0b0); }
+    .card-img.sky     { background: linear-gradient(135deg, #c8daf0, #b0c8e8); }
+
+    .card-body { padding: 22px 24px 24px; }
 
     .card-body h3 {
       font-size: 1.15rem;
-      margin-bottom: 8px;
-      color: #fff;
+      color: #5c4a3a;
+      margin-bottom: 10px;
+      transition: color 0.3s;
     }
 
+    .card:hover .card-body h3 { color: #c0896e; }
+
     .card-body p {
-      font-size: 0.9rem;
-      line-height: 1.6;
-      opacity: 0.6;
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: #9a8a7a;
       margin-bottom: 16px;
     }
 
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
     .card-tags span {
-      display: inline-block;
-      padding: 3px 10px;
-      margin-right: 6px;
-      margin-bottom: 6px;
-      font-size: 0.75rem;
+      padding: 4px 12px;
+      font-size: 0.72rem;
       border-radius: 20px;
-      background: rgba(102, 126, 234, 0.15);
-      color: #667eea;
+      background: linear-gradient(135deg, rgba(210,170,140,0.15), rgba(200,150,180,0.15));
+      color: #b08a70;
+      letter-spacing: 0.3px;
+      transition: all 0.3s;
+    }
+
+    .card:hover .card-tags span {
+      background: linear-gradient(135deg, rgba(210,170,140,0.28), rgba(200,150,180,0.28));
     }
 
     .card-link {
-      display: inline-block;
-      margin-top: 12px;
-      color: #667eea;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 16px;
+      color: #c0896e;
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
+      transition: all 0.3s;
     }
 
-    .card-link:hover { text-decoration: underline; }
+    .card-link .arrow {
+      display: inline-block;
+      transition: transform 0.3s;
+    }
+
+    .card-link:hover { color: #a06848; }
+    .card-link:hover .arrow { transform: translateX(4px); }
+
+    /* ---- footer ---- */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 0 20px 50px;
+      color: #c8b8a8;
+      font-size: 0.82rem;
+      letter-spacing: 1px;
+      animation: fadeDown 1s 0.6s ease both;
+    }
+
+    /* ---- responsive ---- */
+    @media (max-width: 640px) {
+      header { padding: 80px 16px 24px; }
+      header h1 { font-size: 2rem; }
+      .grid { padding: 30px 16px 80px; gap: 20px; }
+      .grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
 
-  <a class="back-link" href="/">&larr; Back</a>
+  <!-- floating particles -->
+  <div class="particles" id="particles"></div>
+
+  <a class="back-link" href="/">&larr; 返回博客</a>
 
   <header>
     <h1>My Portfolio</h1>
-    <p>Here are some of my works</p>
+    <p>记录每一份用心做的小作品</p>
+    <div class="divider"></div>
   </header>
 
   <div class="grid">
 
-    <!-- 作品卡片示例 - 复制修改即可添加更多 -->
+    <!-- 作品卡片 1 -->
     <div class="card">
-      <div class="card-img">🚀</div>
+      <div class="card-img warm">
+        <span class="icon-wrap">🚀</span>
+      </div>
       <div class="card-body">
-        <h3>示例项目</h3>
-        <p>这是一个示例项目卡片，替换为你自己的作品描述。</p>
+        <h3>示例项目 A</h3>
+        <p>这是一个示例项目，替换为你自己的作品描述。</p>
         <div class="card-tags">
           <span>HTML</span>
           <span>CSS</span>
           <span>JavaScript</span>
         </div>
-        <a class="card-link" href="#">查看详情 &rarr;</a>
+        <a class="card-link" href="#">查看详情 <span class="arrow">&rarr;</span></a>
       </div>
     </div>
 
+    <!-- 作品卡片 2 -->
+    <div class="card">
+      <div class="card-img rose">
+        <span class="icon-wrap">🎨</span>
+      </div>
+      <div class="card-body">
+        <h3>示例项目 B</h3>
+        <p>这是另一个示例项目，替换为你自己的作品描述。</p>
+        <div class="card-tags">
+          <span>Design</span>
+          <span>UI/UX</span>
+        </div>
+        <a class="card-link" href="#">查看详情 <span class="arrow">&rarr;</span></a>
+      </div>
+    </div>
+
+    <!-- 作品卡片 3 -->
+    <div class="card">
+      <div class="card-img lavender">
+        <span class="icon-wrap">✨</span>
+      </div>
+      <div class="card-body">
+        <h3>示例项目 C</h3>
+        <p>这是第三个示例项目，替换为你自己的作品描述。</p>
+        <div class="card-tags">
+          <span>Vue</span>
+          <span>Node.js</span>
+        </div>
+        <a class="card-link" href="#">查看详情 <span class="arrow">&rarr;</span></a>
+      </div>
+    </div>
+
+    <!--
+    更多卡片模板 - 复制修改即可
+    可选的 card-img 配色: warm / rose / lavender / mint / peach / sky
+
+    <div class="card">
+      <div class="card-img mint">
+        <span class="icon-wrap">🌿</span>
+      </div>
+      <div class="card-body">
+        <h3>项目名称</h3>
+        <p>项目描述</p>
+        <div class="card-tags">
+          <span>标签</span>
+        </div>
+        <a class="card-link" href="#">查看详情 <span class="arrow">&rarr;</span></a>
+      </div>
+    </div>
+    -->
+
   </div>
+
+  <footer>
+    <p>- with love -</p>
+  </footer>
+
+  <script>
+    // Generate warm floating particles
+    const container = document.getElementById('particles');
+    const colors = [
+      'rgba(220,180,150,0.35)',
+      'rgba(210,160,180,0.30)',
+      'rgba(180,170,210,0.25)',
+      'rgba(200,190,160,0.30)',
+      'rgba(230,200,170,0.35)',
+    ];
+
+    for (let i = 0; i < 25; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 10 + 4;
+      p.style.cssText = `
+        width: ${size}px;
+        height: ${size}px;
+        left: ${Math.random() * 100}%;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        animation-duration: ${Math.random() * 12 + 10}s;
+        animation-delay: ${Math.random() * 10}s;
+      `;
+      container.appendChild(p);
+    }
+  </script>
 
 </body>
 </html>
