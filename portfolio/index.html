@@ -191,8 +191,10 @@
         <!-- 作品详情弹出面板 -->
         <div id="project-panel" class="absolute top-[20%] left-10 w-80 md:w-96 rounded-3xl p-6 pointer-events-auto flex flex-col max-h-[70vh] overflow-y-auto">
             
-            <div class="flex justify-between items-center mb-4">
-                <span id="panel-tag" class="px-3 py-1 rounded-full text-xs font-bold">Tag</span>
+            <div class="flex justify-between items-start mb-4 gap-3">
+                <div id="panel-tags" class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold">Tag</span>
+                </div>
                 <button id="close-btn" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -231,7 +233,7 @@
             {
                 id: 1,
                 title: "去她身边-GoFindHer",
-                tag: "资源管理 吉比特全国高校gamejam挑战赛-第二名",
+                tag: ["吉比特全国高校gamejam挑战赛-第二名", "策划", "程序"],
                 desc: `你是一枚黑洞，爱上了另一枚更巨大的黑洞。
 用自己的质量作燃料，向她飞奔。
 靠近 = 燃烧，犹豫 = 消散。
@@ -248,7 +250,7 @@
             {
                 id: 2,
                 title: "奇怪的大乱斗",
-                tag: "平台射击 多人 派对游戏 机核BOOOM",
+                tag: ["平台射击", "多人", "派对游戏", "机核BOOOM", "策划", "程序"],
                 desc: `可爱外表下藏着残酷真相——天使未必仁慈，恶魔未必恶意，你只是他们掌中掷骰的玩物。数值随时暴走崩坏，随机性彻底失控，笑到喷饭与惨叫连连交织。
 专为朋友聚会设计：越离谱的数值，越爆发的欢乐！双人人本地乱斗，化身软萌吐弹小史莱姆，在陆地/太空/水下多场景中互射火焰、冰霜、黑洞、钩锁。天使骰子许你奇迹，恶魔骰子送你地狱，每两次roll后大事件强制翻盘，数值爆炸就是常态！
 “掷骰吧，迎接命运——然后看着它把所有人玩到崩溃。”`,
@@ -264,7 +266,7 @@
             {
                 id: 3,
                 title: "轴承的浪漫",
-                tag: "腾讯gamejam武大华科站-最佳视觉",
+                tag: ["腾讯gamejam武大华科站-最佳视觉", "策划", "程序"],
                 desc: `王国之泪究极手与古代科技的碰撞！
                 使用零件，组装自己的木质小车，挑战不同地形，
                 能到达终点吗？
@@ -282,7 +284,7 @@
             {
                 id: 4,
                 title: "巧聊数源",
-                tag: "全国大学生数字媒体科技作品及创意竞赛-三等奖",
+                tag: ["全国大学生数字媒体科技作品及创意竞赛-三等奖", "程序"],
                 desc: `少年因为打翻爷爷的键盘而进入一个奇妙的数学世界
                 在这里他遇到了很多古代数学家
                 在经历了一个个熟悉的数学知识组成的冒险后
@@ -301,7 +303,7 @@
             {
                 id: 5,
                 title: "小鲸——自开发动捕面捕数字人",
-                tag: "技术尝试 animation rigging IK",
+                tag: ["技术尝试", "animation rigging", "反向动力学", "程序"],
                 desc: `基于OVRLipSync技术方案进行口型映射。
 通过自训练GPT-sovit实现语音的个性化定制。
 结合CV(计算机视觉)与深度学习后的mediapipe进行高精度实时动作捕捉与面部捕捉
@@ -318,8 +320,8 @@
             {
                 id: 6,
                 title: "代号：射击",
-                tag: "环境识别 无缝动作系统 行为树 反向动力学",
-                desc: "主要运用animation rigging、IK、反向动力学、行为树、环境识别等工具和技术，实现一个具有高度真实感的射击游戏角色。",
+                tag: ["环境识别", "无缝动作系统", "行为树", "反向动力学", "程序"],
+                desc: "主要运用animation rigging、IK、行为树、环境识别等工具和技术，实现一个具有高度真实感的射击游戏角色。",
                 icon: "icons/tps.png",
                 gif: "gifs/tps.gif",
                 emoji: "☕",
@@ -661,7 +663,7 @@
 
             // UI 元素获取
             const panel = document.getElementById('project-panel');
-            const pTag = document.getElementById('panel-tag');
+            const pTags = document.getElementById('panel-tags');
             const pTitle = document.getElementById('panel-title');
             const pDesc = document.getElementById('panel-desc');
             const pEmojiBox = document.getElementById('panel-emoji');
@@ -723,6 +725,45 @@
                 });
             }
 
+            function normalizeTags(tagValue) {
+                if (Array.isArray(tagValue)) {
+                    return tagValue.map(tag => String(tag).trim()).filter(Boolean);
+                }
+                if (typeof tagValue !== 'string') {
+                    return [];
+                }
+
+                // 字符串模式下支持常见分隔符；推荐直接用数组最稳妥。
+                const hasSeparator = /\||,|，|、|\//.test(tagValue);
+                if (!hasSeparator) {
+                    const single = tagValue.trim();
+                    return single ? [single] : [];
+                }
+
+                return tagValue
+                    .split(/\||,|，|、|\//)
+                    .map(tag => tag.trim())
+                    .filter(Boolean);
+            }
+
+            function renderProjectTags(tagValue, bgColor, textColor) {
+                const tags = normalizeTags(tagValue);
+                pTags.innerHTML = '';
+
+                if (tags.length === 0) {
+                    tags.push('Tag');
+                }
+
+                tags.forEach((tagText) => {
+                    const tagEl = document.createElement('span');
+                    tagEl.className = 'px-3 py-1 rounded-full text-xs font-bold';
+                    tagEl.innerText = tagText;
+                    tagEl.style.backgroundColor = bgColor;
+                    tagEl.style.color = textColor;
+                    pTags.appendChild(tagEl);
+                });
+            }
+
             // --- 6. 动态生成右侧导航列表 ---
             projectsData.forEach((project) => {
                 const navItem = document.createElement('button');
@@ -778,9 +819,7 @@
             // 显示面板函数
             function showProjectPanel(data) {
                 // 填充数据
-                pTag.innerText = data.tag;
-                pTag.style.backgroundColor = data.tagColor;
-                pTag.style.color = data.tagText;
+                renderProjectTags(data.tag, data.tagColor, data.tagText);
                 
                 pTitle.innerText = data.title;
                 pDesc.innerText = data.desc;
