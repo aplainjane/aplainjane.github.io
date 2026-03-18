@@ -200,14 +200,15 @@
                 </button>
             </div>
 
-            <div id="panel-emoji" class="w-full h-32 rounded-2xl flex items-center justify-center text-6xl shadow-inner mb-4">
-                🎨
+            <div id="panel-emoji" class="w-full aspect-video rounded-2xl flex items-center justify-center text-6xl shadow-inner mb-4 overflow-hidden">
+                <img id="panel-icon" src="" alt="项目图标" class="w-full h-full object-cover hidden" loading="lazy">
+                <span id="panel-emoji-fallback">🎨</span>
             </div>
 
             <h2 id="panel-title" class="text-2xl font-extrabold text-gray-800 mb-2">项目标题</h2>
             <div class="w-10 h-1 bg-gradient-to-r from-[#FF9A8B] to-[#D4C4FB] rounded-full mb-4"></div>
             
-            <p id="panel-desc" class="text-gray-600 text-sm leading-relaxed mb-4">
+            <p id="panel-desc" class="text-gray-600 text-sm leading-relaxed mb-4 whitespace-pre-line">
                 项目描述将在这里显示。
             </p>
             
@@ -229,9 +230,14 @@
         const projectsData = [
             {
                 id: 1,
-                title: "云端日记本 App",
-                tag: "Web Design",
-                desc: "这是一款治愈系日记应用。它采用轻量级的架构，记录用户的每一个小情绪，并将它们化作云朵存储在「天空」中。使用了 React 和 TailwindCSS 构建。",
+                title: "去她身边-GoFindHer",
+                tag: "资源管理 解密",
+                desc: `你是一枚黑洞，爱上了另一枚更巨大的黑洞。
+用自己的质量作燃料，向她飞奔。
+靠近 = 燃烧，犹豫 = 消散。
+最终的浪漫，只有一种结局——被她完全吸收。`,
+                icon: "icons/GoFindHer.png",
+                gif: "gifs/gofindher.gif",
                 emoji: "🎨",
                 url: "/portfolio/pages/test/index.html",
                 bgColor: "#FFD3B6",
@@ -241,9 +247,11 @@
             },
             {
                 id: 2,
-                title: "智能闲聊机器人小橘",
+                title: "奇怪的大乱斗",
                 tag: "Algorithm",
                 desc: "基于大语言模型微调的性格陪伴机器人。设定是一只温暖的橘猫，会在深夜给你讲冷笑话。优化了上下文记忆和情感分析。",
+                icon: "icons/brawl.png",
+                gif: "gifs/brawl.gif",
                 emoji: "🤖",
                 url: "#",
                 bgColor: "#D4C4FB",
@@ -253,9 +261,11 @@
             },
             {
                 id: 3,
-                title: "星空轨迹数据可视化",
+                title: "轴承的浪漫",
                 tag: "Data Viz",
                 desc: "利用 D3.js 将繁杂的开源贡献数据转化为可视化的星空图。每一个提交就是一颗亮起的星星，连接起来形成属于开发者的星系。",
+                icon: "icons/dataviz.png",
+                gif: "gifs/dataviz.gif",
                 emoji: "📊",
                 url: "#",
                 bgColor: "#A0E8AF",
@@ -265,9 +275,11 @@
             },
             {
                 id: 4,
-                title: "深夜咖啡馆概念店",
+                title: "TPS demo",
                 tag: "UI/UX",
                 desc: "模拟深夜营业的线上咖啡馆，用户可以点选白噪音进行番茄钟专注。大量采用了温暖的木质色调与拟物化的阴影效果。",
+                icon: "icons/tps-demo.png",
+                gif: "gifs/tps-demo.gif",
                 emoji: "☕",
                 url: "#",
                 bgColor: "#FFB6B9",
@@ -277,9 +289,11 @@
             },
             {
                 id: 5,
-                title: "新添加的魔法作品",
+                title: "小鲸——自开发动捕面捕数字人",
                 tag: "New Magic",
                 desc: "你看！这是我刚刚添加的新作品。由于使用了斐波那契球面算法，所有的作品坐标都会被自动重新计算，永远均匀、漂亮地散落在星球上！",
+                icon: "icons/new-magic.png",
+                gif: "gifs/new-magic.gif",
                 emoji: "✨",
                 url: "#",
                 bgColor: "#FDE047",
@@ -611,17 +625,47 @@
             const pTag = document.getElementById('panel-tag');
             const pTitle = document.getElementById('panel-title');
             const pDesc = document.getElementById('panel-desc');
-            const pEmoji = document.getElementById('panel-emoji');
+            const pEmojiBox = document.getElementById('panel-emoji');
+            const pEmoji = document.getElementById('panel-emoji-fallback');
+            const pIcon = document.getElementById('panel-icon');
             const pLink = document.getElementById('panel-link');
             const closeBtn = document.getElementById('close-btn');
             const rightNav = document.getElementById('right-nav');
+
+            function setProjectMedia(iconEl, fallbackEl, project) {
+                const mediaSrc = project.gif || project.icon;
+                if (!mediaSrc) {
+                    iconEl.classList.add('hidden');
+                    fallbackEl.classList.remove('hidden');
+                    fallbackEl.innerText = project.emoji || '🪐';
+                    return;
+                }
+
+                iconEl.src = mediaSrc;
+                iconEl.alt = `${project.title} 预览`;
+                iconEl.classList.remove('hidden');
+                fallbackEl.classList.add('hidden');
+
+                iconEl.onerror = () => {
+                    if (project.gif && project.icon && iconEl.src.indexOf(project.icon) === -1) {
+                        iconEl.src = project.icon;
+                        return;
+                    }
+                    iconEl.classList.add('hidden');
+                    fallbackEl.classList.remove('hidden');
+                    fallbackEl.innerText = project.emoji || '🪐';
+                };
+            }
 
             // --- 6. 动态生成右侧导航列表 ---
             projectsData.forEach((project) => {
                 const navItem = document.createElement('button');
                 navItem.className = 'flex items-center gap-3 p-2 pr-4 bg-white/60 hover:bg-white/90 backdrop-blur-md rounded-full shadow-sm transition-all hover:scale-105 hover:shadow-md border border-white/50 group';
                 navItem.innerHTML = `
-                    <span class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-inner text-sm group-hover:rotate-12 transition-transform">${project.emoji}</span>
+                    <span class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-inner text-sm group-hover:rotate-12 transition-transform overflow-hidden">
+                        <img src="${project.icon || ''}" alt="${project.title} 图标" class="w-full h-full object-cover rounded-full" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                        <span style="display:${project.icon ? 'none' : 'inline'};">${project.emoji || '🪐'}</span>
+                    </span>
                     <span class="text-sm font-bold text-gray-700 whitespace-nowrap">${project.title}</span>
                 `;
                 
@@ -675,8 +719,8 @@
                 pTitle.innerText = data.title;
                 pDesc.innerText = data.desc;
                 
-                pEmoji.innerText = data.emoji;
-                pEmoji.style.background = `linear-gradient(135deg, ${data.bgColor}, #ffffff)`;
+                setProjectMedia(pIcon, pEmoji, data);
+                pEmojiBox.style.background = `linear-gradient(135deg, ${data.bgColor}, #ffffff)`;
 
                 pLink.href = data.url || '#';
 
