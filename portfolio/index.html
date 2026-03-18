@@ -335,6 +335,17 @@
         window.onload = function() {
             const container = document.getElementById('canvas-container');
             const scene = new THREE.Scene();
+
+            // 页面启动即预加载所有 GIF，减少首次切换时的等待。
+            const gifPreloadPool = [];
+            projectsData
+                .map(project => project.gif)
+                .filter(Boolean)
+                .forEach((gifSrc) => {
+                    const preloadImg = new Image();
+                    preloadImg.src = gifSrc;
+                    gifPreloadPool.push(preloadImg);
+                });
             
             // 摄像机
             const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
